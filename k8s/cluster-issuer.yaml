@@ -1,0 +1,16 @@
+
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+  namespace: cert-manager
+spec:
+  acme: # Tipo de certificado. O acme eh o mais usado
+    server: https://acme-v02.api.letsencrypt.org/directory 
+    email: lhfam97@gmail.com # Email responsavel
+    privateKeySecretRef:
+      name: letsencrypt-tls
+    solvers: # Configurar como vai usar o https baseado no certificado. No caso usar o ingress controller no nginx
+    - http01:
+        ingress:
+          class: nginx

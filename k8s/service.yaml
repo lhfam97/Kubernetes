@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: goserver-service
+spec:
+  selector: # Filtra os pods associados ao service
+      app: goserver
+  type: LoadBalancer # Por padrao tem 4 tipos: ClusterIP, NodePort, LoadBalancer e Headless
+  ports:
+  - name: goserver-service
+    port: 80 # porta do service
+    targetPort:  8000 # porta do container
+    protocol: TCP
+  
+
+    

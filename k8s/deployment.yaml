@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goserver
+  labels:
+    app: goserver
+spec:
+  selector:
+    matchLabels:
+      app: goserver
+  replicas: 2
+  template:  # template do pod a ser replicado
+    metadata:
+      labels:
+        app: "goserver"
+    spec:
+      containers:
+      - name: goserver
+        image: "luique97/hello-go:v6"
+
+        resources:
+          requests: #  RESERVA ESSE RECURSO PRA ESSE NOVO POD. Se o valor minimo for maior que a maquina a pod vai sempre ficar como pendente
+            cpu: "0.05" # vCPU unidade de medida pra analizar poder de processamento VCPU -> 1000m (milicores). pode usar tambem porcentagem
+            memory: 20Mi
+          limits:
+            cpu: "0.05" # Ate quanto de cpu a pod pode crescer
+            memory: 25Mi # Ate quanto a memoria pode crescer
+   
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: 8000  
+          periodSeconds: 4
+          failureThreshold: 30     
+
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          periodSeconds: 3 # tempo pra fazer novass requisicoes
+          failureThreshold: 1  # Quantas vezes precisa falhar para dar o ok
+          # initialDelaySeconds: 10 # Aguarda um tempo pra comecar a verificar
+
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          periodSeconds: 5  # tempo pra fazer requisicoes
+          failureThreshold: 3  # Quantas vezes precisa falhar para reiniciar a pod
+          timeoutSeconds: 1 # Limite de tempo para completar a requisicao
+          successThreshold: 1 # Quantas vezes precisa testar pra ta tudo ok,pra falar quea aplicacao ta viva (live)
+          # initialDelaySeconds: 15 # Aguarda um tempo pra comecar a verificar
+
+        envFrom:
+          - configMapRef:
+              name: goserver-env
+          - secretRef:
+              name: goserver-secret
+
+        volumeMounts: # Monta o volume que nos declaramos
+          - mountPath: "/go/myfamily" # Monta o volume nesse endereco
+            name: config # Nome do volume a ser montado
+          - mountPath: "go/pvc" # Monta o volume nesse endereco
+            name: goserver-volume # Nome do volume a ser montado
+ 
+      volumes:
+      - name: goserver-volume
+        persistentVolumeClaim:  # Tipo do volume
+          claimName: goserver-pvc
+
+      - name: config
+        configMap:
+          name: configmap-family
+          items:
+          - key: members
+            path: "family.txt" # Arquivo a ser criado baseado no configmap

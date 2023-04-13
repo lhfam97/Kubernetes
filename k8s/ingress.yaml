@@ -1,0 +1,23 @@
+
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-host
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    ingress.kubernetes.io/force-ssl-redirect: "true" # Redirect toda vez que o usuario acessa o http vai mudar  pra https
+spec:
+  rules:
+  - host: "ingress.fullcycle.com.br"
+    http:
+      paths: # Redirecionamento baseado na rota para o service
+      - pathType: Prefix
+        path: "/admin"
+        backend: # Servico que voce acessa  com essa novva
+          serviceName: goserver-service
+          servicePort: 80
+  tls:
+  - hosts: # Dominio que vai usar tls 
+    - "ingress.fullcycle.com.br"
+    secretName: letsencrypt-tls 
